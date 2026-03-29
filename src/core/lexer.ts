@@ -1,14 +1,25 @@
 export type TokenType =
   | "LOAD"
+  | "SELECT"
+  | "FILTER"
   | "DERIVE"
   | "GROUP"
   | "BY"
   | "AGGREGATE"
-  | "SUM"
-  | "EXPORT"
+  | "SORT"
+  | "TAKE"
+  | "PLOT"
   | "IDENT"
+  | "NUMBER"
   | "STRING"
+  | "EQEQ"
+  | "NEQ"
+  | "GT"
+  | "GTE"
+  | "LT"
+  | "LTE"
   | "EQ"
+  | "BANG"
   | "STAR"
   | "PLUS"
   | "MINUS"
@@ -26,12 +37,15 @@ export interface Token {
 
 const KEYWORDS: Record<string, TokenType> = {
   load: "LOAD",
+  select: "SELECT",
+  filter: "FILTER",
   derive: "DERIVE",
   group: "GROUP",
   by: "BY",
   aggregate: "AGGREGATE",
-  sum: "SUM",
-  export: "EXPORT",
+  sort: "SORT",
+  take: "TAKE",
+  plot: "PLOT",
 };
 
 export class Lexer {
@@ -60,12 +74,23 @@ export class Lexer {
     const ch = this.src[start];
 
     if (ch === '"') return this.readString();
-
     if (this.isAlpha(ch)) return this.readIdent();
+    if (this.isDigit(ch)) return this.readNumber();
 
     this.pos++;
     switch (ch) {
-      case "=": return this.tok("EQ", "=", start);
+      case "=":
+        if (this.src[this.pos] === "=") { this.pos++; return this.tok("EQEQ", "==", start); }
+        return this.tok("EQ", "=", start);
+      case "!":
+        if (this.src[this.pos] === "=") { this.pos++; return this.tok("NEQ", "!=", start); }
+        return this.tok("BANG", "!", start);
+      case ">":
+        if (this.src[this.pos] === "=") { this.pos++; return this.tok("GTE", ">=", start); }
+        return this.tok("GT", ">", start);
+      case "<":
+        if (this.src[this.pos] === "=") { this.pos++; return this.tok("LTE", "<=", start); }
+        return this.tok("LT", "<", start);
       case "*": return this.tok("STAR", "*", start);
       case "+": return this.tok("PLUS", "+", start);
       case "-": return this.tok("MINUS", "-", start);
@@ -86,6 +111,20 @@ export class Lexer {
     const value = this.src.slice(start, this.pos);
     const type = KEYWORDS[value] ?? "IDENT";
     return this.tok(type, value, start);
+  }
+
+  private readNumber(): Token {
+    const start = this.pos;
+    while (this.pos < this.src.length && this.isDigit(this.src[this.pos])) {
+      this.pos++;
+    }
+    if (this.pos < this.src.length && this.src[this.pos] === ".") {
+      this.pos++;
+      while (this.pos < this.src.length && this.isDigit(this.src[this.pos])) {
+        this.pos++;
+      }
+    }
+    return this.tok("NUMBER", this.src.slice(start, this.pos), start);
   }
 
   private readString(): Token {
@@ -114,6 +153,10 @@ export class Lexer {
 
   private isAlphaNum(ch: string): boolean {
     return /[a-zA-Z0-9_]/.test(ch);
+  }
+
+  private isDigit(ch: string): boolean {
+    return /[0-9]/.test(ch);
   }
 
   private tok(type: TokenType, value: string, pos: number): Token {
