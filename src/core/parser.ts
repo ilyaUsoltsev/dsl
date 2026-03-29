@@ -1,28 +1,5 @@
 import { Lexer } from './lexer';
 import type { Token, TokenType } from './lexer.types';
-export type {
-  Expr,
-  BinaryExpr,
-  UnaryExpr,
-  NumberExpr,
-  StringExpr,
-  IdentExpr,
-  CallExpr,
-  LoadStmt,
-  SelectStmt,
-  FilterStmt,
-  DeriveStmt,
-  GroupStmt,
-  AggItem,
-  AggregateStmt,
-  SortStmt,
-  TakeStmt,
-  PlotType,
-  PlotArg,
-  PlotStmt,
-  Statement,
-  Program,
-} from './ast';
 import type {
   Expr,
   LoadStmt,
